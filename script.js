@@ -168,7 +168,9 @@ async function fetchMinersData() {
         'https://api.allorigins.win/raw?url=',
         'https://cors-anywhere.herokuapp.com/',
         'https://thingproxy.freeboard.io/fetch/',
-        'https://api.codetabs.com/v1/proxy?quest='
+        'https://api.codetabs.com/v1/proxy?quest=',
+        'https://proxy.cors.sh/',
+        'https://corsproxy.io/?'
     ];
     
     for (let i = 0; i < proxies.length; i++) {
@@ -196,14 +198,44 @@ async function fetchMinersData() {
                     }
                 });
             } else {
-                // Other proxies
-                response = await fetch(proxies[i] + CONFIG.API_URL, {
-                    method: 'GET',
-                    headers: {
-                        'Cookie': `gameAccessToken=${CONFIG.COOKIE}`,
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                    }
-                });
+                // Other proxies - try different approaches
+                if (proxies[i].includes('codetabs')) {
+                    // CodeTabs proxy - doesn't support custom headers well
+                    response = await fetch(proxies[i] + CONFIG.API_URL, {
+                        method: 'GET',
+                        headers: {
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                        }
+                    });
+                } else if (proxies[i].includes('cors.sh')) {
+                    // CORS.sh proxy
+                    response = await fetch(proxies[i] + CONFIG.API_URL, {
+                        method: 'GET',
+                        headers: {
+                            'x-cors-api-key': 'temp_1234567890',
+                            'Cookie': `gameAccessToken=${CONFIG.COOKIE}`,
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                        }
+                    });
+                } else if (proxies[i].includes('corsproxy.io')) {
+                    // CORSProxy.io
+                    response = await fetch(proxies[i] + encodeURIComponent(CONFIG.API_URL), {
+                        method: 'GET',
+                        headers: {
+                            'Cookie': `gameAccessToken=${CONFIG.COOKIE}`,
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                        }
+                    });
+                } else {
+                    // Other proxies
+                    response = await fetch(proxies[i] + CONFIG.API_URL, {
+                        method: 'GET',
+                        headers: {
+                            'Cookie': `gameAccessToken=${CONFIG.COOKIE}`,
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                        }
+                    });
+                }
             }
             
             if (response.ok) {
