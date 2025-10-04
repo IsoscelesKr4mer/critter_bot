@@ -47,7 +47,7 @@ const elements = {
     updateTokenBtn: document.getElementById('updateTokenBtn'),
     tokenStatus: document.getElementById('tokenStatus'),
     tokenExpiry: document.getElementById('tokenExpiry'),
-    // Manual data elements
+    // Manual data elements (may not exist)
     manualDataInput: document.getElementById('manualDataInput'),
     loadManualDataBtn: document.getElementById('loadManualDataBtn'),
     // Debug elements
@@ -269,11 +269,11 @@ function processPlotsData(data, timeWindowHours = 5) {
 
     console.log(`Processed ${processedPlots.length} plots for ${timeWindowHours}-hour window`);
     
-    // Update debug info
-    elements.processedPlots.textContent = processedPlots.length;
-    elements.totalMiners.textContent = data.miners ? Object.values(data.miners).flat().length : 0;
-    elements.currentTime.textContent = new Date().toLocaleString();
-    elements.timeFilterValue.textContent = timeWindowHours >= 999 ? 'All (Debug)' : `${timeWindowHours} hours`;
+    // Update debug info (if elements exist)
+    if (elements.processedPlots) elements.processedPlots.textContent = processedPlots.length;
+    if (elements.totalMiners) elements.totalMiners.textContent = data.miners ? Object.values(data.miners).flat().length : 0;
+    if (elements.currentTime) elements.currentTime.textContent = new Date().toLocaleString();
+    if (elements.timeFilterValue) elements.timeFilterValue.textContent = timeWindowHours >= 999 ? 'All (Debug)' : `${timeWindowHours} hours`;
     
     // Sort by time until lootable (soonest first)
     return processedPlots.sort((a, b) => a.timeUntilLootable - b.timeUntilLootable);
@@ -346,9 +346,9 @@ function processMattPlots(data) {
 
     console.log(`Found ${mattMinersFound} miners for Matt, ${mattPlots.length} lootable plots`);
     
-    // Update debug info
-    elements.mattMiners.textContent = mattMinersFound;
-    elements.mattPlots.textContent = mattPlots.length;
+    // Update debug info (if elements exist)
+    if (elements.mattMiners) elements.mattMiners.textContent = mattMinersFound;
+    if (elements.mattPlots) elements.mattPlots.textContent = mattPlots.length;
     
     // Sort by time until lootable (soonest first)
     return mattPlots.sort((a, b) => a.timeUntilLootable - b.timeUntilLootable);
@@ -666,23 +666,25 @@ function setupEventListeners() {
         }
     });
     
-    // Manual data loading
-    elements.loadManualDataBtn.addEventListener('click', () => {
-        const manualData = elements.manualDataInput.value.trim();
-        if (manualData) {
-            try {
-                const data = JSON.parse(manualData);
-                processManualData(data);
-                elements.manualDataInput.value = '';
-                elements.tokenStatus.className = 'token-status success';
-                elements.tokenStatus.innerHTML = '<small>Manual data loaded successfully!</small>';
-            } catch (error) {
-                alert('Invalid JSON format. Please check your data and try again.');
+    // Manual data loading (if elements exist)
+    if (elements.loadManualDataBtn && elements.manualDataInput) {
+        elements.loadManualDataBtn.addEventListener('click', () => {
+            const manualData = elements.manualDataInput.value.trim();
+            if (manualData) {
+                try {
+                    const data = JSON.parse(manualData);
+                    processManualData(data);
+                    elements.manualDataInput.value = '';
+                    elements.tokenStatus.className = 'token-status success';
+                    elements.tokenStatus.innerHTML = '<small>Manual data loaded successfully!</small>';
+                } catch (error) {
+                    alert('Invalid JSON format. Please check your data and try again.');
+                }
+            } else {
+                alert('Please enter JSON data to load.');
             }
-        } else {
-            alert('Please enter JSON data to load.');
-        }
-    });
+        });
+    }
     
     // View toggle
     elements.tableView.addEventListener('click', () => {
