@@ -47,7 +47,7 @@ const elements = {
     updateTokenBtn: document.getElementById('updateTokenBtn'),
     tokenStatus: document.getElementById('tokenStatus'),
     tokenExpiry: document.getElementById('tokenExpiry'),
-    // Manual data elements (may not exist)
+    // Manual data elements
     manualDataInput: document.getElementById('manualDataInput'),
     loadManualDataBtn: document.getElementById('loadManualDataBtn'),
     // Debug elements
@@ -692,25 +692,23 @@ function setupEventListeners() {
         }
     });
     
-    // Manual data loading (if elements exist)
-    if (elements.loadManualDataBtn && elements.manualDataInput) {
-        elements.loadManualDataBtn.addEventListener('click', () => {
-            const manualData = elements.manualDataInput.value.trim();
-            if (manualData) {
-                try {
-                    const data = JSON.parse(manualData);
-                    processManualData(data);
-                    elements.manualDataInput.value = '';
-                    elements.tokenStatus.className = 'token-status success';
-                    elements.tokenStatus.innerHTML = '<small>Manual data loaded successfully!</small>';
-                } catch (error) {
-                    alert('Invalid JSON format. Please check your data and try again.');
-                }
-            } else {
-                alert('Please enter JSON data to load.');
+    // Manual data loading
+    elements.loadManualDataBtn.addEventListener('click', () => {
+        const manualData = elements.manualDataInput.value.trim();
+        if (manualData) {
+            try {
+                const data = JSON.parse(manualData);
+                processManualData(data);
+                elements.manualDataInput.value = '';
+                elements.tokenStatus.className = 'token-status success';
+                elements.tokenStatus.innerHTML = '<small>Manual data loaded successfully!</small>';
+            } catch (error) {
+                alert('Invalid JSON format. Please check your data and try again.');
             }
-        });
-    }
+        } else {
+            alert('Please enter JSON data to load.');
+        }
+    });
     
     // View toggle
     elements.tableView.addEventListener('click', () => {

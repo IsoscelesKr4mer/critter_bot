@@ -177,17 +177,28 @@
                 </div>
 
                 <div class="widget">
-                    <h3><i class="fas fa-tools"></i> Get Game Token</h3>
+                    <h3><i class="fas fa-tools"></i> Manual Data Input</h3>
+                    <div class="alert alert-warning">
+                        <strong>CORS Issue:</strong> The API is blocked by browser security. Use manual data input below.
+                    </div>
+                    <div class="token-form">
+                        <textarea id="manualDataInput" placeholder="Paste miners JSON data here..." rows="4"></textarea>
+                        <button id="loadManualDataBtn" class="btn btn-secondary">
+                            <i class="fas fa-upload"></i> Load Data
+                        </button>
+                    </div>
                     <div class="troubleshooting-info">
                         <small>
-                            <strong>To get your game token:</strong><br>
+                            <strong>Step-by-step instructions:</strong><br>
                             1. Go to <a href="https://beta.critters.quest" target="_blank">beta.critters.quest</a><br>
                             2. Log in to your account<br>
                             3. Open Developer Tools (F12)<br>
-                            4. Go to <strong>Application</strong> → <strong>Cookies</strong><br>
-                            5. Find <code>gameAccessToken</code><br>
-                            6. Copy the entire token value<br>
-                            7. Paste it in the Token Management section above
+                            4. Go to <strong>Network</strong> tab<br>
+                            5. Refresh the page or navigate around<br>
+                            6. Look for a request to <code>/api/mining/miners</code><br>
+                            7. Click on it and go to <strong>Response</strong> tab<br>
+                            8. Copy the entire JSON response<br>
+                            9. Paste it above and click "Load Data"
                         </small>
                     </div>
                 </div>

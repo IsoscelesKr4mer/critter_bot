@@ -1,67 +1,77 @@
-# Critter Quest Lootable Plots Tracker
+# Critter Quest Lootable Plots Discord Bot
 
-A web-based tracker for monitoring upcoming lootable plots in Critter Quest. This project converts the original Discord bot functionality into a modern, responsive web interface.
+A Discord bot that monitors upcoming lootable plots in Critter Quest and sends automated reminders.
 
 ## Features
 
-- **Real-time Plot Tracking**: Monitor plots that will become lootable within configurable time windows
-- **Interactive Dashboard**: View plots in table or card format with live countdown timers
-- **Search & Filter**: Find specific plots by tile number, player, or wallet address
-- **Statistics**: Overview of total plots, unique players, and average levels
-- **Responsive Design**: Works seamlessly on desktop and mobile devices
-- **Auto-refresh**: Data updates automatically every 30 minutes
+- **Automated Monitoring**: Checks for lootable plots every 30 minutes
+- **Smart Reminders**: Sends alerts at 30min, 15min, 5min, and 1min before lootable
+- **Matt's Plots**: Special tracking for Matt's wallet with dedicated alerts
+- **Manual Commands**: Check specific tiles, wallets, or time windows
+- **Persistent Storage**: Remembers plots and sent reminders
 
-## Live Demo
+## Setup
 
-Visit the live website: [Critter Quest Lootable Plots Tracker](https://yourusername.github.io/critter_bot)
+1. **Install dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-## How to Use
+2. **Configure the bot**:
+   - Update `BOT_TOKEN` with your Discord bot token
+   - Update `GAME_ACCESS_TOKEN` with your game access token
+   - Update `DISCORD_CHANNEL_ID` with your channel ID
 
-1. **Select Time Window**: Choose how far ahead to look for lootable plots (1-24 hours)
-2. **Search**: Use the search bar to find specific plots by tile number or player
-3. **View Options**: Switch between table and card views for different data presentations
-4. **Quick Search**: Use the sidebar to quickly search by tile number or wallet address
+3. **Run the bot**:
+   ```bash
+   python lootable_bot.py
+   ```
 
-## Data Source
+## Commands
 
-This tracker uses data from the Critter Quest API at `cqg.critters.quest/api/mining/miners`.
+- `!checknow` - Generate 5-hour lootable plots summary
+- `!check [hours]` - Check plots for specific time window (e.g., `!check 12`)
+- `!check [tile]` - Check specific tile status (e.g., `!check 12345`)
+- `!check [wallet]` - Check all miners for wallet address
+- `!matt` - Quick check for Matt's plots
+- `!help` - Show available commands
 
-## Technical Details
+## Token Management
 
-- **Frontend**: HTML5, CSS3, JavaScript (ES6+)
-- **Styling**: Custom CSS with modern design patterns
-- **API**: Direct API calls with CORS proxy for browser compatibility
-- **Hosting**: GitHub Pages
-- **Auto-refresh**: Client-side polling every 30 minutes
-- **Security**: No sensitive tokens or credentials in client-side code
+### Discord Bot Token
+1. Go to [Discord Developer Portal](https://discord.com/developers/applications)
+2. Create a new application
+3. Go to "Bot" section
+4. Copy the token and update `BOT_TOKEN`
 
-## Setup for GitHub Pages
+### Game Access Token
+1. Go to [beta.critters.quest](https://beta.critters.quest)
+2. Log in to your account
+3. Open Developer Tools (F12)
+4. Go to Application → Cookies
+5. Find `gameAccessToken` and copy the value
+6. Update `GAME_ACCESS_TOKEN`
 
-1. Fork this repository
-2. Enable GitHub Pages in repository settings
-3. Select source as "Deploy from a branch"
-4. Choose "main" branch and "/ (root)" folder
-5. Your site will be available at `https://yourusername.github.io/critter_bot`
+## Configuration
 
-## Browser Compatibility
+- `CHECK_INTERVAL_MINUTES`: How often to check (default: 30 minutes)
+- `ALERT_WINDOW_SECONDS`: Default alert window (default: 5 hours)
+- `REMINDER_INTERVALS`: Reminder times before lootable (default: 30min, 15min, 5min, 1min)
+- `MATT_WALLET`: Matt's wallet address for special tracking
 
-- Chrome 60+
-- Firefox 55+
-- Safari 12+
-- Edge 79+
+## Data Storage
 
-## Contributing
+The bot stores plot data and reminder history in `plots.json` to prevent duplicate notifications.
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+## Troubleshooting
 
-## License
+- **Bot not responding**: Check if the bot token is correct and has proper permissions
+- **No data**: Update the game access token if it has expired
+- **Wrong channel**: Make sure the channel ID is correct
+- **API errors**: Check if the game API is accessible
 
-This project is open source and available under the MIT License.
+## Security
 
-## Disclaimer
-
-This tool is for informational purposes only. Always verify data through official sources before making any in-game decisions.
+- Never commit tokens to version control
+- Use environment variables for production
+- Regularly update tokens when they expire
