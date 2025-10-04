@@ -241,6 +241,13 @@ async function fetchMinersData() {
             if (response.ok) {
                 const data = await response.json();
                 console.log(`Successfully fetched data using proxy ${i + 1}`);
+                
+                // Check if we got unauthorized response
+                if (data.status === false && data.message && data.message.includes('Unauthorized')) {
+                    console.log(`Proxy ${i + 1} returned unauthorized - token not sent properly`);
+                    continue;
+                }
+                
                 return data;
             } else {
                 console.log(`Proxy ${i + 1} failed with status: ${response.status}`);
@@ -266,7 +273,7 @@ async function fetchMinersData() {
         }
     }
     
-    throw new Error('All API proxies failed and no cached data available. Please check your internet connection and try again.');
+    throw new Error('All API proxies failed due to authentication issues. Please use the manual data input method in the Troubleshooting section to load data directly.');
 }
 
 // Data processing
