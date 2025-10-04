@@ -165,7 +165,7 @@ function updateGameToken(newToken) {
 // API functions
 async function fetchMinersData() {
     try {
-        // Simple direct fetch like the Discord bot
+        // Try direct fetch first
         const response = await fetch(CONFIG.API_URL, {
             method: 'GET',
             headers: {
@@ -187,9 +187,35 @@ async function fetchMinersData() {
         
         return data;
     } catch (error) {
-        console.error('Error fetching miners data:', error);
+        console.error('Direct fetch failed:', error);
         
-        // If direct fetch fails, try to load from local storage as fallback
+        // If direct fetch fails due to CORS, try a simple proxy
+        try {
+            console.log('Trying CORS proxy...');
+            const proxyResponse = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(CONFIG.API_URL)}`, {
+                method: 'GET',
+                headers: {
+                    'Cookie': `gameAccessToken=${CONFIG.COOKIE}`,
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                }
+            });
+            
+            if (proxyResponse.ok) {
+                const data = await proxyResponse.json();
+                
+                // Check if we got unauthorized response
+                if (data.status === false && data.message && data.message.includes('Unauthorized')) {
+                    throw new Error('Game access token expired or invalid. Please update your token in the Token Management section.');
+                }
+                
+                console.log('Successfully fetched data via proxy');
+                return data;
+            }
+        } catch (proxyError) {
+            console.error('Proxy fetch also failed:', proxyError);
+        }
+        
+        // If both direct and proxy fail, try cached data
         const cachedData = localStorage.getItem('cachedMinersData');
         if (cachedData) {
             const parsedData = JSON.parse(cachedData);
@@ -203,7 +229,7 @@ async function fetchMinersData() {
             }
         }
         
-        throw error;
+        throw new Error('Unable to fetch data. Please check your game token and try again.');
     }
 }
 
