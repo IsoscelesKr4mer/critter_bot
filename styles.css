@@ -464,6 +464,24 @@ body {
     line-height: 1.4;
 }
 
+.debug-info {
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+.debug-info p {
+    margin: 5px 0;
+    padding: 3px 0;
+}
+
+.debug-info span {
+    font-family: 'Courier New', monospace;
+    background: #f1f5f9;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+
 /* Table View */
 .table-view {
     width: 100%;

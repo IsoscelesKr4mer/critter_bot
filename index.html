@@ -31,6 +31,7 @@
                     <option value="5" selected>5 Hours</option>
                     <option value="12">12 Hours</option>
                     <option value="24">24 Hours</option>
+                    <option value="999">Show All (Debug)</option>
                 </select>
             </div>
             <div class="control-group">
@@ -193,6 +194,18 @@
                             4. Find the miners API call<br>
                             5. Copy the response JSON
                         </small>
+                    </div>
+                </div>
+
+                <div class="widget">
+                    <h3><i class="fas fa-bug"></i> Debug Info</h3>
+                    <div id="debugInfo" class="debug-info">
+                        <p><strong>Current Time:</strong> <span id="currentTime">Loading...</span></p>
+                        <p><strong>Time Filter:</strong> <span id="timeFilterValue">5 hours</span></p>
+                        <p><strong>Total Miners:</strong> <span id="totalMiners">0</span></p>
+                        <p><strong>Processed Plots:</strong> <span id="processedPlots">0</span></p>
+                        <p><strong>Matt's Miners:</strong> <span id="mattMiners">0</span></p>
+                        <p><strong>Matt's Plots:</strong> <span id="mattPlots">0</span></p>
                     </div>
                 </div>
 

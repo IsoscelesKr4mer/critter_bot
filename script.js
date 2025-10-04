@@ -49,7 +49,14 @@ const elements = {
     tokenExpiry: document.getElementById('tokenExpiry'),
     // Manual data elements
     manualDataInput: document.getElementById('manualDataInput'),
-    loadManualDataBtn: document.getElementById('loadManualDataBtn')
+    loadManualDataBtn: document.getElementById('loadManualDataBtn'),
+    // Debug elements
+    currentTime: document.getElementById('currentTime'),
+    timeFilterValue: document.getElementById('timeFilterValue'),
+    totalMiners: document.getElementById('totalMiners'),
+    processedPlots: document.getElementById('processedPlots'),
+    mattMiners: document.getElementById('mattMiners'),
+    mattPlots: document.getElementById('mattPlots')
 };
 
 // Utility functions
@@ -232,21 +239,46 @@ async function fetchMinersData() {
 
 // Data processing
 function processPlotsData(data, timeWindowHours = 5) {
+    console.log('Processing plots data:', data);
     const currentTime = getCurrentTimestamp();
     const twentyFourHours = 24 * 3600;
     const alertWindowSeconds = timeWindowHours * 3600;
     const processedPlots = [];
 
+    // Debug: log the data structure
+    console.log('Data structure:', {
+        hasMiners: !!data.miners,
+        minersKeys: data.miners ? Object.keys(data.miners) : 'no miners',
+        totalMiners: data.miners ? Object.values(data.miners).flat().length : 0
+    });
+
     for (const miningGroup of Object.values(data.miners || {})) {
         for (const miner of miningGroup) {
+            console.log('Processing miner:', {
+                user: miner.user,
+                expectedEndTime: miner.expectedEndTime,
+                destination: miner.destination,
+                currentTile: miner.currentTile,
+                level: miner.level,
+                tier: miner.tier
+            });
+
             if (miner.expectedEndTime && (miner.destination || miner.currentTile)) {
                 const lootableTime = miner.expectedEndTime + twentyFourHours;
                 const timeUntilLootable = lootableTime - currentTime;
                 const tile = miner.destination || miner.currentTile;
 
-                // Only include plots within the specified time window
-                if (timeUntilLootable > 0 && timeUntilLootable <= alertWindowSeconds) {
-                    processedPlots.push({
+                console.log('Miner details:', {
+                    tile,
+                    lootableTime,
+                    timeUntilLootable,
+                    alertWindowSeconds,
+                    withinWindow: timeUntilLootable > 0 && timeUntilLootable <= alertWindowSeconds
+                });
+
+                // Only include plots within the specified time window (or all if debug mode)
+                if (timeUntilLootable > 0 && (alertWindowSeconds >= 999 * 3600 || timeUntilLootable <= alertWindowSeconds)) {
+                    const plot = {
                         tile: tile,
                         player: miner.user || 'unknown',
                         level: miner.level || 0,
@@ -257,12 +289,22 @@ function processPlotsData(data, timeWindowHours = 5) {
                         timeUntilLootable: timeUntilLootable,
                         isLootable: timeUntilLootable <= 60,
                         isSoon: timeUntilLootable <= 5 * 60
-                    });
+                    };
+                    processedPlots.push(plot);
+                    console.log('Added plot:', plot);
                 }
             }
         }
     }
 
+    console.log(`Processed ${processedPlots.length} plots for ${timeWindowHours}-hour window`);
+    
+    // Update debug info
+    elements.processedPlots.textContent = processedPlots.length;
+    elements.totalMiners.textContent = data.miners ? Object.values(data.miners).flat().length : 0;
+    elements.currentTime.textContent = new Date().toLocaleString();
+    elements.timeFilterValue.textContent = timeWindowHours >= 999 ? 'All (Debug)' : `${timeWindowHours} hours`;
+    
     // Sort by time until lootable (soonest first)
     return processedPlots.sort((a, b) => a.timeUntilLootable - b.timeUntilLootable);
 }
@@ -279,36 +321,65 @@ function calculateStats(plots) {
 
 // Matt's plots processing
 function processMattPlots(data) {
+    console.log('Processing Matt\'s plots data...');
     const currentTime = getCurrentTimestamp();
     const twentyFourHours = 24 * 3600;
     const mattPlots = [];
+    let mattMinersFound = 0;
 
     for (const miningGroup of Object.values(data.miners || {})) {
         for (const miner of miningGroup) {
-            if (miner.user === CONFIG.MATT_WALLET && miner.expectedEndTime && (miner.destination || miner.currentTile)) {
-                const lootableTime = miner.expectedEndTime + twentyFourHours;
-                const timeUntilLootable = lootableTime - currentTime;
-                const tile = miner.destination || miner.currentTile;
+            if (miner.user === CONFIG.MATT_WALLET) {
+                mattMinersFound++;
+                console.log('Found Matt\'s miner:', {
+                    user: miner.user,
+                    expectedEndTime: miner.expectedEndTime,
+                    destination: miner.destination,
+                    currentTile: miner.currentTile,
+                    level: miner.level,
+                    tier: miner.tier
+                });
 
-                // Include all plots for Matt, regardless of time window
-                if (timeUntilLootable > 0) {
-                    mattPlots.push({
-                        tile: tile,
-                        player: miner.user,
-                        level: miner.level || 0,
-                        tier: miner.tier || 0,
-                        timeLeft: formatTimeDuration(timeUntilLootable),
-                        lootableAt: formatDateTime(lootableTime),
-                        lootableTime: lootableTime,
-                        timeUntilLootable: timeUntilLootable,
-                        isLootable: timeUntilLootable <= 60,
-                        isSoon: timeUntilLootable <= 5 * 60
+                if (miner.expectedEndTime && (miner.destination || miner.currentTile)) {
+                    const lootableTime = miner.expectedEndTime + twentyFourHours;
+                    const timeUntilLootable = lootableTime - currentTime;
+                    const tile = miner.destination || miner.currentTile;
+
+                    console.log('Matt\'s miner details:', {
+                        tile,
+                        lootableTime,
+                        timeUntilLootable,
+                        willBeLootable: timeUntilLootable > 0
                     });
+
+                    // Include all plots for Matt, regardless of time window
+                    if (timeUntilLootable > 0) {
+                        const plot = {
+                            tile: tile,
+                            player: miner.user,
+                            level: miner.level || 0,
+                            tier: miner.tier || 0,
+                            timeLeft: formatTimeDuration(timeUntilLootable),
+                            lootableAt: formatDateTime(lootableTime),
+                            lootableTime: lootableTime,
+                            timeUntilLootable: timeUntilLootable,
+                            isLootable: timeUntilLootable <= 60,
+                            isSoon: timeUntilLootable <= 5 * 60
+                        };
+                        mattPlots.push(plot);
+                        console.log('Added Matt\'s plot:', plot);
+                    }
                 }
             }
         }
     }
 
+    console.log(`Found ${mattMinersFound} miners for Matt, ${mattPlots.length} lootable plots`);
+    
+    // Update debug info
+    elements.mattMiners.textContent = mattMinersFound;
+    elements.mattPlots.textContent = mattPlots.length;
+    
     // Sort by time until lootable (soonest first)
     return mattPlots.sort((a, b) => a.timeUntilLootable - b.timeUntilLootable);
 }
