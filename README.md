@@ -33,6 +33,7 @@ This tracker uses data from the Critter Quest API at `cqg.critters.quest/api/min
 - **API**: Direct API calls with CORS proxy for browser compatibility
 - **Hosting**: GitHub Pages
 - **Auto-refresh**: Client-side polling every 30 minutes
+- **Security**: No sensitive tokens or credentials in client-side code
 
 ## Setup for GitHub Pages
 

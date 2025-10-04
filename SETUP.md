@@ -133,9 +133,10 @@ If you encounter any issues:
 
 ## Security Notes
 
-- The API token is visible in the client-side code
-- This is acceptable for this use case, but consider server-side authentication for production
-- Never commit sensitive information to public repositories
+- The website uses only the game access token needed for API calls (no Discord tokens)
+- The API token is visible in the client-side code (acceptable for this use case)
+- Never commit Discord bot tokens or other sensitive credentials to public repositories
+- The original Discord bot file has been removed for security
 
 ## Performance Tips
 
