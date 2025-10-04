@@ -46,7 +46,10 @@ const elements = {
     tokenInput: document.getElementById('tokenInput'),
     updateTokenBtn: document.getElementById('updateTokenBtn'),
     tokenStatus: document.getElementById('tokenStatus'),
-    tokenExpiry: document.getElementById('tokenExpiry')
+    tokenExpiry: document.getElementById('tokenExpiry'),
+    // Manual data elements
+    manualDataInput: document.getElementById('manualDataInput'),
+    loadManualDataBtn: document.getElementById('loadManualDataBtn')
 };
 
 // Utility functions
@@ -154,55 +157,77 @@ function updateGameToken(newToken) {
 
 // API functions
 async function fetchMinersData() {
-    try {
-        // Use a CORS proxy service to bypass browser restrictions
-        // You can replace this with your own proxy server if needed
-        const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-        const response = await fetch(proxyUrl + CONFIG.API_URL, {
-            method: 'GET',
-            headers: {
-                'Cookie': `gameAccessToken=${CONFIG.COOKIE}`,
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            mode: 'cors'
-        });
-        
-        if (!response.ok) {
-            // Fallback to alternative proxy
-            const fallbackProxy = 'https://api.allorigins.win/raw?url=';
-            const fallbackResponse = await fetch(fallbackProxy + encodeURIComponent(CONFIG.API_URL), {
-                headers: {
-                    'Cookie': `gameAccessToken=${CONFIG.COOKIE}`
-                }
-            });
+    const proxies = [
+        'https://api.allorigins.win/raw?url=',
+        'https://cors-anywhere.herokuapp.com/',
+        'https://thingproxy.freeboard.io/fetch/',
+        'https://api.codetabs.com/v1/proxy?quest='
+    ];
+    
+    for (let i = 0; i < proxies.length; i++) {
+        try {
+            console.log(`Trying proxy ${i + 1}/${proxies.length}: ${proxies[i]}`);
             
-            if (!fallbackResponse.ok) {
-                throw new Error(`HTTP error! status: ${fallbackResponse.status}`);
+            let response;
+            if (proxies[i].includes('allorigins')) {
+                // AllOrigins proxy
+                response = await fetch(proxies[i] + encodeURIComponent(CONFIG.API_URL), {
+                    method: 'GET',
+                    headers: {
+                        'Cookie': `gameAccessToken=${CONFIG.COOKIE}`,
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                    }
+                });
+            } else if (proxies[i].includes('cors-anywhere')) {
+                // CORS Anywhere proxy
+                response = await fetch(proxies[i] + CONFIG.API_URL, {
+                    method: 'GET',
+                    headers: {
+                        'Cookie': `gameAccessToken=${CONFIG.COOKIE}`,
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                    }
+                });
+            } else {
+                // Other proxies
+                response = await fetch(proxies[i] + CONFIG.API_URL, {
+                    method: 'GET',
+                    headers: {
+                        'Cookie': `gameAccessToken=${CONFIG.COOKIE}`,
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                    }
+                });
             }
             
-            return await fallbackResponse.json();
-        }
-        
-        return await response.json();
-    } catch (error) {
-        console.error('Error fetching miners data:', error);
-        
-        // If all API calls fail, try to load from local storage as fallback
-        const cachedData = localStorage.getItem('cachedMinersData');
-        if (cachedData) {
-            const parsedData = JSON.parse(cachedData);
-            const cacheTime = localStorage.getItem('cachedMinersDataTime');
-            const now = Date.now();
-            
-            // Use cached data if it's less than 1 hour old
-            if (cacheTime && (now - parseInt(cacheTime)) < 3600000) {
-                console.log('Using cached data as fallback');
-                return parsedData;
+            if (response.ok) {
+                const data = await response.json();
+                console.log(`Successfully fetched data using proxy ${i + 1}`);
+                return data;
+            } else {
+                console.log(`Proxy ${i + 1} failed with status: ${response.status}`);
             }
+        } catch (error) {
+            console.log(`Proxy ${i + 1} error:`, error.message);
+            continue;
         }
-        
-        throw error;
     }
+    
+    // If all proxies fail, try to load from local storage as fallback
+    console.log('All proxies failed, trying cached data...');
+    const cachedData = localStorage.getItem('cachedMinersData');
+    if (cachedData) {
+        const parsedData = JSON.parse(cachedData);
+        const cacheTime = localStorage.getItem('cachedMinersDataTime');
+        const now = Date.now();
+        
+        // Use cached data if it's less than 24 hours old
+        if (cacheTime && (now - parseInt(cacheTime)) < 86400000) {
+            console.log('Using cached data as fallback');
+            return parsedData;
+        }
+    }
+    
+    throw new Error('All API proxies failed and no cached data available. Please check your internet connection and try again.');
 }
 
 // Data processing
@@ -501,6 +526,35 @@ function hideMattError() {
     elements.mattErrorMessage.style.display = 'none';
 }
 
+// Manual data processing
+function processManualData(data) {
+    try {
+        // Process the data the same way as API data
+        plotsData = processPlotsData(data, currentTimeFilter);
+        mattPlots = processMattPlots(data);
+        
+        // Cache the data
+        localStorage.setItem('cachedMinersData', JSON.stringify(data));
+        localStorage.setItem('cachedMinersDataTime', Date.now().toString());
+        
+        // Update the UI
+        applyFilters();
+        renderMattPlots(mattPlots);
+        updateLastUpdated();
+        
+        // Hide any loading/error states
+        hideLoading();
+        hideError();
+        hideMattLoading();
+        hideMattError();
+        
+        console.log('Manual data processed successfully');
+    } catch (error) {
+        console.error('Error processing manual data:', error);
+        alert('Error processing the data. Please check the format and try again.');
+    }
+}
+
 // Filter and search functions
 function filterPlots(plots, timeWindowHours, searchTerm = '') {
     const currentTime = getCurrentTimestamp();
@@ -568,6 +622,24 @@ function setupEventListeners() {
     elements.tokenInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             elements.updateTokenBtn.click();
+        }
+    });
+    
+    // Manual data loading
+    elements.loadManualDataBtn.addEventListener('click', () => {
+        const manualData = elements.manualDataInput.value.trim();
+        if (manualData) {
+            try {
+                const data = JSON.parse(manualData);
+                processManualData(data);
+                elements.manualDataInput.value = '';
+                elements.tokenStatus.className = 'token-status success';
+                elements.tokenStatus.innerHTML = '<small>Manual data loaded successfully!</small>';
+            } catch (error) {
+                alert('Invalid JSON format. Please check your data and try again.');
+            }
+        } else {
+            alert('Please enter JSON data to load.');
         }
     });
     

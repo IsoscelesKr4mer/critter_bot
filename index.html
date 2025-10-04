@@ -7,6 +7,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💎</text></svg>">
 </head>
 <body>
     <div class="container">
@@ -171,6 +172,27 @@
                     </div>
                     <div id="tokenStatus" class="token-status">
                         <small>Current token expires: <span id="tokenExpiry">Loading...</span></small>
+                    </div>
+                </div>
+
+                <div class="widget">
+                    <h3><i class="fas fa-tools"></i> Troubleshooting</h3>
+                    <p>If the API is not working, you can manually paste JSON data:</p>
+                    <div class="token-form">
+                        <textarea id="manualDataInput" placeholder="Paste miners JSON data here..." rows="4"></textarea>
+                        <button id="loadManualDataBtn" class="btn btn-secondary">
+                            <i class="fas fa-upload"></i> Load Data
+                        </button>
+                    </div>
+                    <div class="troubleshooting-info">
+                        <small>
+                            <strong>How to get data:</strong><br>
+                            1. Open browser dev tools (F12)<br>
+                            2. Go to Network tab<br>
+                            3. Visit cqg.critters.quest<br>
+                            4. Find the miners API call<br>
+                            5. Copy the response JSON
+                        </small>
                     </div>
                 </div>
 
