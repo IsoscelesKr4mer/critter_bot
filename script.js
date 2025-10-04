@@ -4,12 +4,14 @@ const CONFIG = {
     REFRESH_INTERVAL: 30 * 60 * 1000, // 30 minutes
     COOKIE: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ3YWxsZXQiOiI2Nk1FUzVMN05iemRwVDZpWHRRb0NuSGFnNXptQlBRcFhqYlc3QWgzRFpEVCIsImlhdCI6MTc1OTUxOTEyNiwiZXhwIjoxNzU5NTYyMzI2fQ.Lszd_5Ji1UdPR2oRTToQ5y2_TJRuWRSicx4d_hFwj2U',
     REMINDER_INTERVALS: [30 * 60, 15 * 60, 5 * 60, 60], // 30min, 15min, 5min, 1min
-    ALERT_WINDOW_SECONDS: 5 * 3600 // 5 hours
+    ALERT_WINDOW_SECONDS: 5 * 3600, // 5 hours
+    MATT_WALLET: '3E77qMQBScwWQDeauPgerW5G46pB42HngbGCb32oBfu1' // Matt's wallet address
 };
 
 // Global state
 let plotsData = [];
 let filteredPlots = [];
+let mattPlots = [];
 let currentView = 'table';
 let currentTimeFilter = 5;
 let refreshInterval;
@@ -33,7 +35,18 @@ const elements = {
     tileSearch: document.getElementById('tileSearch'),
     searchTileBtn: document.getElementById('searchTileBtn'),
     walletSearch: document.getElementById('walletSearch'),
-    searchWalletBtn: document.getElementById('searchWalletBtn')
+    searchWalletBtn: document.getElementById('searchWalletBtn'),
+    // Matt's section elements
+    mattLoadingIndicator: document.getElementById('mattLoadingIndicator'),
+    mattErrorMessage: document.getElementById('mattErrorMessage'),
+    mattErrorText: document.getElementById('mattErrorText'),
+    mattPlotsContainer: document.getElementById('mattPlotsContainer'),
+    refreshMattBtn: document.getElementById('refreshMattBtn'),
+    // Token management elements
+    tokenInput: document.getElementById('tokenInput'),
+    updateTokenBtn: document.getElementById('updateTokenBtn'),
+    tokenStatus: document.getElementById('tokenStatus'),
+    tokenExpiry: document.getElementById('tokenExpiry')
 };
 
 // Utility functions
@@ -63,6 +76,80 @@ function formatDateTime(timestamp) {
 
 function getTimeZone() {
     return Intl.DateTimeFormat().resolvedOptions().timeZone;
+}
+
+// Token management functions
+function parseJWT(token) {
+    try {
+        const parts = token.split('.');
+        if (parts.length !== 3) return null;
+        
+        const payload = JSON.parse(atob(parts[1]));
+        return {
+            wallet: payload.wallet,
+            issuedAt: payload.iat,
+            expiresAt: payload.exp,
+            isValid: payload.exp > Math.floor(Date.now() / 1000)
+        };
+    } catch (error) {
+        console.error('Error parsing JWT:', error);
+        return null;
+    }
+}
+
+function updateTokenStatus() {
+    const tokenInfo = parseJWT(CONFIG.COOKIE);
+    if (tokenInfo) {
+        const expiryDate = new Date(tokenInfo.expiresAt * 1000);
+        const timeUntilExpiry = tokenInfo.expiresAt - Math.floor(Date.now() / 1000);
+        
+        elements.tokenExpiry.textContent = expiryDate.toLocaleString();
+        
+        // Update status styling
+        elements.tokenStatus.className = 'token-status';
+        if (timeUntilExpiry < 0) {
+            elements.tokenStatus.classList.add('expired');
+            elements.tokenStatus.innerHTML = `<small>Token expired: <span>${expiryDate.toLocaleString()}</span></small>`;
+        } else if (timeUntilExpiry < 3600) { // Less than 1 hour
+            elements.tokenStatus.classList.add('warning');
+            elements.tokenStatus.innerHTML = `<small>Token expires soon: <span>${expiryDate.toLocaleString()}</span></small>`;
+        } else {
+            elements.tokenStatus.innerHTML = `<small>Token expires: <span>${expiryDate.toLocaleString()}</span></small>`;
+        }
+    } else {
+        elements.tokenStatus.className = 'token-status expired';
+        elements.tokenStatus.innerHTML = '<small>Invalid token format</small>';
+    }
+}
+
+function updateGameToken(newToken) {
+    // Validate the new token
+    const tokenInfo = parseJWT(newToken);
+    if (!tokenInfo) {
+        alert('Invalid token format. Please check your token and try again.');
+        return false;
+    }
+    
+    // Update the configuration
+    CONFIG.COOKIE = newToken;
+    
+    // Save to localStorage for persistence
+    localStorage.setItem('gameAccessToken', newToken);
+    
+    // Update the display
+    updateTokenStatus();
+    
+    // Show success message
+    elements.tokenStatus.className = 'token-status success';
+    elements.tokenStatus.innerHTML = `<small>Token updated successfully! Expires: <span>${new Date(tokenInfo.expiresAt * 1000).toLocaleString()}</span></small>`;
+    
+    // Clear the input
+    elements.tokenInput.value = '';
+    
+    // Reload data with new token
+    loadData();
+    
+    return true;
 }
 
 // API functions
@@ -163,6 +250,42 @@ function calculateStats(plots) {
         avgLevel: plots.length > 0 ? Math.round(plots.reduce((sum, p) => sum + p.level, 0) / plots.length) : 0
     };
     return stats;
+}
+
+// Matt's plots processing
+function processMattPlots(data) {
+    const currentTime = getCurrentTimestamp();
+    const twentyFourHours = 24 * 3600;
+    const mattPlots = [];
+
+    for (const miningGroup of Object.values(data.miners || {})) {
+        for (const miner of miningGroup) {
+            if (miner.user === CONFIG.MATT_WALLET && miner.expectedEndTime && (miner.destination || miner.currentTile)) {
+                const lootableTime = miner.expectedEndTime + twentyFourHours;
+                const timeUntilLootable = lootableTime - currentTime;
+                const tile = miner.destination || miner.currentTile;
+
+                // Include all plots for Matt, regardless of time window
+                if (timeUntilLootable > 0) {
+                    mattPlots.push({
+                        tile: tile,
+                        player: miner.user,
+                        level: miner.level || 0,
+                        tier: miner.tier || 0,
+                        timeLeft: formatTimeDuration(timeUntilLootable),
+                        lootableAt: formatDateTime(lootableTime),
+                        lootableTime: lootableTime,
+                        timeUntilLootable: timeUntilLootable,
+                        isLootable: timeUntilLootable <= 60,
+                        isSoon: timeUntilLootable <= 5 * 60
+                    });
+                }
+            }
+        }
+    }
+
+    // Sort by time until lootable (soonest first)
+    return mattPlots.sort((a, b) => a.timeUntilLootable - b.timeUntilLootable);
 }
 
 // UI update functions
@@ -309,6 +432,75 @@ function getStatusText(plot) {
     return 'Later';
 }
 
+// Matt's section rendering
+function renderMattPlots(plots) {
+    if (plots.length === 0) {
+        elements.mattPlotsContainer.innerHTML = `
+            <div class="matt-no-plots">
+                <i class="fas fa-search"></i>
+                <p>No active plots found for Matt's wallet.</p>
+                <p>Either no miners are active or all plots have been looted.</p>
+            </div>
+        `;
+        return;
+    }
+
+    const plotsHTML = plots.map(plot => `
+        <div class="matt-plot-card ${getStatusClass(plot)} fade-in">
+            <div class="matt-plot-header">
+                <div class="matt-plot-tile">Tile ${plot.tile}</div>
+                <span class="status-badge ${getStatusClass(plot)}">
+                    ${getStatusText(plot)}
+                </span>
+            </div>
+            <div class="plot-details">
+                <div class="detail-item">
+                    <div class="detail-label">Level</div>
+                    <div class="detail-value">${plot.level}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Tier</div>
+                    <div class="detail-value">${plot.tier}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Time Left</div>
+                    <div class="detail-value"><strong>${plot.timeLeft}</strong></div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Status</div>
+                    <div class="detail-value">${getStatusText(plot)}</div>
+                </div>
+            </div>
+            <div class="matt-plot-timer">
+                <div class="matt-timer-text">${plot.timeLeft}</div>
+                <div class="matt-timer-subtext">${plot.lootableAt}</div>
+            </div>
+        </div>
+    `).join('');
+    
+    elements.mattPlotsContainer.innerHTML = plotsHTML;
+}
+
+function showMattLoading() {
+    elements.mattLoadingIndicator.style.display = 'block';
+    elements.mattErrorMessage.style.display = 'none';
+    elements.mattPlotsContainer.innerHTML = '';
+}
+
+function hideMattLoading() {
+    elements.mattLoadingIndicator.style.display = 'none';
+}
+
+function showMattError(message) {
+    elements.mattErrorText.textContent = message;
+    elements.mattErrorMessage.style.display = 'block';
+    elements.mattLoadingIndicator.style.display = 'none';
+}
+
+function hideMattError() {
+    elements.mattErrorMessage.style.display = 'none';
+}
+
 // Filter and search functions
 function filterPlots(plots, timeWindowHours, searchTerm = '') {
     const currentTime = getCurrentTimestamp();
@@ -359,6 +551,25 @@ function setupEventListeners() {
     
     // Refresh button
     elements.refreshBtn.addEventListener('click', loadData);
+    
+    // Matt's refresh button
+    elements.refreshMattBtn.addEventListener('click', loadMattData);
+    
+    // Token management
+    elements.updateTokenBtn.addEventListener('click', () => {
+        const newToken = elements.tokenInput.value.trim();
+        if (newToken) {
+            updateGameToken(newToken);
+        } else {
+            alert('Please enter a token to update.');
+        }
+    });
+    
+    elements.tokenInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            elements.updateTokenBtn.click();
+        }
+    });
     
     // View toggle
     elements.tableView.addEventListener('click', () => {
@@ -435,8 +646,10 @@ async function loadData() {
         localStorage.setItem('cachedMinersDataTime', Date.now().toString());
         
         plotsData = processPlotsData(data, currentTimeFilter);
+        mattPlots = processMattPlots(data);
         
         applyFilters();
+        renderMattPlots(mattPlots);
         updateLastUpdated();
         
         hideLoading();
@@ -447,6 +660,30 @@ async function loadData() {
     } finally {
         elements.refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
         elements.refreshBtn.disabled = false;
+    }
+}
+
+// Matt's data loading function
+async function loadMattData() {
+    try {
+        showMattLoading();
+        hideMattError();
+        
+        elements.refreshMattBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+        elements.refreshMattBtn.disabled = true;
+        
+        const data = await fetchMinersData();
+        mattPlots = processMattPlots(data);
+        
+        renderMattPlots(mattPlots);
+        hideMattLoading();
+        
+    } catch (error) {
+        console.error('Error loading Matt\'s data:', error);
+        showMattError('Failed to load Matt\'s plots data. Please try again.');
+    } finally {
+        elements.refreshMattBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+        elements.refreshMattBtn.disabled = false;
     }
 }
 
@@ -463,7 +700,14 @@ function startAutoRefresh() {
 
 // Initialize the application
 function init() {
+    // Load saved token from localStorage if available
+    const savedToken = localStorage.getItem('gameAccessToken');
+    if (savedToken) {
+        CONFIG.COOKIE = savedToken;
+    }
+    
     setupEventListeners();
+    updateTokenStatus();
     loadData();
     startAutoRefresh();
     
@@ -484,6 +728,24 @@ function init() {
             }).filter(plot => plot.timeUntilLootable > 0);
             
             applyFilters();
+        }
+        
+        // Update Matt's plots timers
+        if (mattPlots.length > 0) {
+            mattPlots = mattPlots.map(plot => {
+                const currentTime = getCurrentTimestamp();
+                const timeUntilLootable = plot.lootableTime - currentTime;
+                
+                return {
+                    ...plot,
+                    timeLeft: formatTimeDuration(timeUntilLootable),
+                    timeUntilLootable: timeUntilLootable,
+                    isLootable: timeUntilLootable <= 60,
+                    isSoon: timeUntilLootable <= 5 * 60
+                };
+            }).filter(plot => plot.timeUntilLootable > 0);
+            
+            renderMattPlots(mattPlots);
         }
     }, 60000); // Update every minute
 }

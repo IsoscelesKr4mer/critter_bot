@@ -96,6 +96,32 @@
                     </div>
                 </div>
 
+                <!-- Loot Matt Section -->
+                <div class="loot-matt-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-crosshairs"></i> Loot Matt!</h2>
+                        <div class="wallet-info">
+                            <span class="wallet-address">3E77qMQBScwWQDeauPgerW5G46pB42HngbGCb32oBfu1</span>
+                            <button id="refreshMattBtn" class="btn btn-primary btn-sm">
+                                <i class="fas fa-sync-alt"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="mattLoadingIndicator" class="loading">
+                        <i class="fas fa-spinner fa-spin"></i> Loading Matt's plots...
+                    </div>
+
+                    <div id="mattErrorMessage" class="error-message" style="display: none;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span id="mattErrorText">Failed to load Matt's plots data.</span>
+                    </div>
+
+                    <div id="mattPlotsContainer" class="matt-plots-container">
+                        <!-- Matt's plots will be dynamically inserted here -->
+                    </div>
+                </div>
+
                 <div id="loadingIndicator" class="loading">
                     <i class="fas fa-spinner fa-spin"></i> Loading plots data...
                 </div>
@@ -131,6 +157,20 @@
                     <h3><i class="fas fa-chart-pie"></i> Distribution</h3>
                     <div id="levelChart" class="chart">
                         <!-- Level distribution chart will be inserted here -->
+                    </div>
+                </div>
+
+                <div class="widget">
+                    <h3><i class="fas fa-key"></i> Token Management</h3>
+                    <p>Update your game access token when it expires:</p>
+                    <div class="token-form">
+                        <input type="text" id="tokenInput" placeholder="Paste your new game token here...">
+                        <button id="updateTokenBtn" class="btn btn-primary">
+                            <i class="fas fa-upload"></i> Update
+                        </button>
+                    </div>
+                    <div id="tokenStatus" class="token-status">
+                        <small>Current token expires: <span id="tokenExpiry">Loading...</span></small>
                     </div>
                 </div>
 

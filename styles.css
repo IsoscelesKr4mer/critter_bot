@@ -265,6 +265,178 @@ body {
     min-height: 200px;
 }
 
+/* Loot Matt Section */
+.loot-matt-section {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+    border-radius: 20px;
+    padding: 30px;
+    margin: 30px 0;
+    box-shadow: 0 10px 30px rgba(255, 107, 107, 0.3);
+}
+
+.loot-matt-section .section-header {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 25px;
+}
+
+.loot-matt-section .section-header h2 {
+    color: white;
+    margin-bottom: 15px;
+}
+
+.loot-matt-section .section-header h2 i {
+    color: #ffd93d;
+}
+
+.wallet-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.wallet-address {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+.btn-sm {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+}
+
+.matt-plots-container {
+    min-height: 100px;
+}
+
+.matt-plot-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    border-left: 5px solid #ff6b6b;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.matt-plot-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.matt-plot-card.lootable {
+    border-left-color: #4ecdc4;
+    background: linear-gradient(135deg, rgba(78, 205, 196, 0.1) 0%, rgba(255, 255, 255, 0.95) 100%);
+}
+
+.matt-plot-card.soon {
+    border-left-color: #ffd93d;
+    background: linear-gradient(135deg, rgba(255, 217, 61, 0.1) 0%, rgba(255, 255, 255, 0.95) 100%);
+}
+
+.matt-plot-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.matt-plot-tile {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #2d3748;
+}
+
+.matt-plot-timer {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+    margin-top: 15px;
+}
+
+.matt-timer-text {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin-bottom: 5px;
+}
+
+.matt-timer-subtext {
+    font-size: 0.9rem;
+    color: #718096;
+}
+
+.matt-no-plots {
+    text-align: center;
+    padding: 40px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 1.1rem;
+}
+
+.matt-no-plots i {
+    font-size: 3rem;
+    margin-bottom: 20px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* Token Management */
+.token-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.token-form input {
+    padding: 12px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-family: 'Courier New', monospace;
+    background: white;
+}
+
+.token-form input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.token-status {
+    padding: 10px;
+    background: #f7fafc;
+    border-radius: 8px;
+    border-left: 4px solid #667eea;
+}
+
+.token-status.warning {
+    background: #fef5e7;
+    border-left-color: #ed8936;
+    color: #744210;
+}
+
+.token-status.expired {
+    background: #fed7d7;
+    border-left-color: #e53e3e;
+    color: #c53030;
+}
+
+.token-status.success {
+    background: #c6f6d5;
+    border-left-color: #48bb78;
+    color: #22543d;
+}
+
 /* Table View */
 .table-view {
     width: 100%;
