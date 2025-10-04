@@ -164,116 +164,47 @@ function updateGameToken(newToken) {
 
 // API functions
 async function fetchMinersData() {
-    const proxies = [
-        'https://api.allorigins.win/raw?url=',
-        'https://cors-anywhere.herokuapp.com/',
-        'https://thingproxy.freeboard.io/fetch/',
-        'https://api.codetabs.com/v1/proxy?quest=',
-        'https://proxy.cors.sh/',
-        'https://corsproxy.io/?'
-    ];
-    
-    for (let i = 0; i < proxies.length; i++) {
-        try {
-            console.log(`Trying proxy ${i + 1}/${proxies.length}: ${proxies[i]}`);
-            
-            let response;
-            if (proxies[i].includes('allorigins')) {
-                // AllOrigins proxy
-                response = await fetch(proxies[i] + encodeURIComponent(CONFIG.API_URL), {
-                    method: 'GET',
-                    headers: {
-                        'Cookie': `gameAccessToken=${CONFIG.COOKIE}`,
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                    }
-                });
-            } else if (proxies[i].includes('cors-anywhere')) {
-                // CORS Anywhere proxy
-                response = await fetch(proxies[i] + CONFIG.API_URL, {
-                    method: 'GET',
-                    headers: {
-                        'Cookie': `gameAccessToken=${CONFIG.COOKIE}`,
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                    }
-                });
-            } else {
-                // Other proxies - try different approaches
-                if (proxies[i].includes('codetabs')) {
-                    // CodeTabs proxy - doesn't support custom headers well
-                    response = await fetch(proxies[i] + CONFIG.API_URL, {
-                        method: 'GET',
-                        headers: {
-                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                        }
-                    });
-                } else if (proxies[i].includes('cors.sh')) {
-                    // CORS.sh proxy
-                    response = await fetch(proxies[i] + CONFIG.API_URL, {
-                        method: 'GET',
-                        headers: {
-                            'x-cors-api-key': 'temp_1234567890',
-                            'Cookie': `gameAccessToken=${CONFIG.COOKIE}`,
-                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                        }
-                    });
-                } else if (proxies[i].includes('corsproxy.io')) {
-                    // CORSProxy.io
-                    response = await fetch(proxies[i] + encodeURIComponent(CONFIG.API_URL), {
-                        method: 'GET',
-                        headers: {
-                            'Cookie': `gameAccessToken=${CONFIG.COOKIE}`,
-                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                        }
-                    });
-                } else {
-                    // Other proxies
-                    response = await fetch(proxies[i] + CONFIG.API_URL, {
-                        method: 'GET',
-                        headers: {
-                            'Cookie': `gameAccessToken=${CONFIG.COOKIE}`,
-                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                        }
-                    });
-                }
+    try {
+        // Simple direct fetch like the Discord bot
+        const response = await fetch(CONFIG.API_URL, {
+            method: 'GET',
+            headers: {
+                'Cookie': `gameAccessToken=${CONFIG.COOKIE}`,
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
             }
-            
-            if (response.ok) {
-                const data = await response.json();
-                console.log(`Successfully fetched data using proxy ${i + 1}`);
-                
-                // Check if we got unauthorized response
-                if (data.status === false && data.message && data.message.includes('Unauthorized')) {
-                    console.log(`Proxy ${i + 1} returned unauthorized - token not sent properly`);
-                    continue;
-                }
-                
-                return data;
-            } else {
-                console.log(`Proxy ${i + 1} failed with status: ${response.status}`);
-            }
-        } catch (error) {
-            console.log(`Proxy ${i + 1} error:`, error.message);
-            continue;
-        }
-    }
-    
-    // If all proxies fail, try to load from local storage as fallback
-    console.log('All proxies failed, trying cached data...');
-    const cachedData = localStorage.getItem('cachedMinersData');
-    if (cachedData) {
-        const parsedData = JSON.parse(cachedData);
-        const cacheTime = localStorage.getItem('cachedMinersDataTime');
-        const now = Date.now();
+        });
         
-        // Use cached data if it's less than 24 hours old
-        if (cacheTime && (now - parseInt(cacheTime)) < 86400000) {
-            console.log('Using cached data as fallback');
-            return parsedData;
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
+        
+        const data = await response.json();
+        
+        // Check if we got unauthorized response
+        if (data.status === false && data.message && data.message.includes('Unauthorized')) {
+            throw new Error('Game access token expired or invalid. Please update your token in the Token Management section.');
+        }
+        
+        return data;
+    } catch (error) {
+        console.error('Error fetching miners data:', error);
+        
+        // If direct fetch fails, try to load from local storage as fallback
+        const cachedData = localStorage.getItem('cachedMinersData');
+        if (cachedData) {
+            const parsedData = JSON.parse(cachedData);
+            const cacheTime = localStorage.getItem('cachedMinersDataTime');
+            const now = Date.now();
+            
+            // Use cached data if it's less than 24 hours old
+            if (cacheTime && (now - parseInt(cacheTime)) < 86400000) {
+                console.log('Using cached data as fallback');
+                return parsedData;
+            }
+        }
+        
+        throw error;
     }
-    
-    throw new Error('All API proxies failed due to authentication issues. Please use the manual data input method in the Troubleshooting section to load data directly.');
 }
 
 // Data processing
