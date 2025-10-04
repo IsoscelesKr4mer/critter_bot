@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Critter Quest Lootable Plots Tracker</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-gem"></i> Critter Quest Lootable Plots</h1>
+                <p class="subtitle">Track upcoming lootable plots and mining operations</p>
+                <div class="last-updated">
+                    <i class="fas fa-clock"></i>
+                    <span id="lastUpdated">Loading...</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="timeFilter">Time Window:</label>
+                <select id="timeFilter">
+                    <option value="1">1 Hour</option>
+                    <option value="2">2 Hours</option>
+                    <option value="5" selected>5 Hours</option>
+                    <option value="12">12 Hours</option>
+                    <option value="24">24 Hours</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="searchInput">Search:</label>
+                <input type="text" id="searchInput" placeholder="Search by tile, player, or wallet...">
+            </div>
+            <div class="control-group">
+                <button id="refreshBtn" class="btn btn-primary">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-map-marker-alt"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number" id="totalPlots">0</div>
+                    <div class="stat-label">Total Plots</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number" id="lootableSoon">0</div>
+                    <div class="stat-label">Lootable Soon</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number" id="uniquePlayers">0</div>
+                    <div class="stat-label">Unique Players</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number" id="avgLevel">0</div>
+                    <div class="stat-label">Avg Level</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="plots-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-list"></i> Upcoming Lootable Plots</h2>
+                    <div class="view-toggle">
+                        <button id="tableView" class="btn btn-secondary active">
+                            <i class="fas fa-table"></i> Table
+                        </button>
+                        <button id="cardView" class="btn btn-secondary">
+                            <i class="fas fa-th-large"></i> Cards
+                        </button>
+                    </div>
+                </div>
+
+                <div id="loadingIndicator" class="loading">
+                    <i class="fas fa-spinner fa-spin"></i> Loading plots data...
+                </div>
+
+                <div id="errorMessage" class="error-message" style="display: none;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span id="errorText">Failed to load data. Please try again.</span>
+                </div>
+
+                <div id="plotsContainer" class="plots-container">
+                    <!-- Plots will be dynamically inserted here -->
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="widget">
+                    <h3><i class="fas fa-search"></i> Quick Search</h3>
+                    <div class="search-form">
+                        <input type="text" id="tileSearch" placeholder="Tile number...">
+                        <button id="searchTileBtn" class="btn btn-primary">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                    <div class="search-form">
+                        <input type="text" id="walletSearch" placeholder="Wallet address...">
+                        <button id="searchWalletBtn" class="btn btn-primary">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="widget">
+                    <h3><i class="fas fa-chart-pie"></i> Distribution</h3>
+                    <div id="levelChart" class="chart">
+                        <!-- Level distribution chart will be inserted here -->
+                    </div>
+                </div>
+
+                <div class="widget">
+                    <h3><i class="fas fa-info-circle"></i> About</h3>
+                    <p>This tracker monitors upcoming lootable plots in Critter Quest. Data is refreshed every 30 minutes.</p>
+                    <p><strong>Source:</strong> cqg.critters.quest</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

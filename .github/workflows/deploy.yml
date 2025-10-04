@@ -1,0 +1,67 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        
+    - name: Install dependencies
+      run: |
+        # No dependencies needed for this static site
+        echo "No dependencies to install"
+        
+    - name: Validate HTML
+      run: |
+        # Basic HTML validation
+        if ! grep -q "<!DOCTYPE html>" index.html; then
+          echo "Error: index.html missing DOCTYPE declaration"
+          exit 1
+        fi
+        if ! grep -q "<title>" index.html; then
+          echo "Error: index.html missing title tag"
+          exit 1
+        fi
+        echo "HTML validation passed"
+        
+    - name: Validate CSS
+      run: |
+        # Basic CSS validation
+        if ! grep -q "body" styles.css; then
+          echo "Error: styles.css missing body selector"
+          exit 1
+        fi
+        echo "CSS validation passed"
+        
+    - name: Validate JavaScript
+      run: |
+        # Basic JavaScript validation
+        if ! grep -q "function" script.js; then
+          echo "Error: script.js missing function declarations"
+          exit 1
+        fi
+        echo "JavaScript validation passed"
+        
+    - name: Deploy to GitHub Pages
+      if: github.ref == 'refs/heads/main'
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./
+        exclude_assets: |
+          .github/
+          README.md
+          .gitignore
